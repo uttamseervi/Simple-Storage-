@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.8;
+pragma solidity ^0.8.0;
 
 contract SimpleStorage{
     uint256  favoriteNumber; //Declare a variable of type 'uint'
@@ -13,14 +13,14 @@ contract SimpleStorage{
     People[] public people;
     mapping(string => uint256) public nameToFavNumber;
 
-    function store(uint256 _favoriteNumber) public {
+    function store(uint256 _favoriteNumber) public virtual {
         favoriteNumber = _favoriteNumber;
     }
     // the color of the store is orange but the rest function is bluish bcz no gas is utilised in the executing the rest of the function 
     // view,pure 
 
     // and we use view method does not alter the state of the block chain rather it will just returns the value of the variable
-    function retrive() public view returns (uint256){
+    function retrieve() public view returns (uint256){
         return favoriteNumber;
     } 
     // we can use the pure method in order to make some mathematical calculations 
