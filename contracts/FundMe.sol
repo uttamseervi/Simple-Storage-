@@ -1,24 +1,30 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./PriceConverter.sol";
 
 // 0xB690803D85716Dccae7FbaaE2e4Ef1Adec55D04d test net address
-contract FundMe {
-    using PriceConverter for uint256;
+error NotOwner();
 
-    uint256 public minimumUSD = 50 * 1e18;
+
+contract FundMe {
+
+    /*so we can improve our code by using the constant and immutable keyword in solidity like for the MINIMUM_USD it can be changed ,but i want to keep unchanged so we can use constant keyword
+    even the reqiure statement also consumes some amount of gas so we can replace them with solidity custom errros
+    */
+    using PriceConverter for uint256;
+    uint256 public constant MINIMUM_USD = 50 * 1e18;
     address[] public funders;
     mapping(address => uint256) public addressToAmountFunded;
-    address public owner;
+    address public immutable i_owner;
 
     constructor() {
         // msg.sender represents the person who deploys the contract
-        owner = msg.sender;
+        i_owner = msg.sender;
     }
 
     function fund() public payable {
-        require(msg.value.getConversionRate() >= minimumUSD, "Didn't send enough!");
+        require(msg.value.getConversionRate() >= MINIMUM_USD, "Didn't send enough!");
         addressToAmountFunded[msg.sender] += msg.value;
         funders.push(msg.sender);
     }
@@ -32,8 +38,19 @@ contract FundMe {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "Sender is not the owner!");
+        // require(msg.sender == i_owner, "Sender is not the owner!");
+        if(msg.sender != i_owner) {
+            revert NotOwner();
+        }
         _;
+    }
+
+    // What happens if someone tries sending eth wihtout calling fund function  we can make use of  ("recive" and "fallback")
+    receive() external payable {
+        fund();
+     }
+    fallback() external payable { 
+        fund();
     }
 }
 
@@ -51,7 +68,7 @@ contract FundMe {
 // contract FundMe{
 //     using PriceConverter for uint256;
 
-//     uint256 public minimumUSD = 50 * 1e18;
+//     uint256 public MINIMUM_USD = 50 * 1e18;
 //     address[] public funders;
 //     mapping(address=>uint256) public addressToAmountFunded; 
 //     address public owner;
@@ -72,7 +89,7 @@ contract FundMe {
 //             2.Inorder to get the price of 1 Eth in USD we have to use some decentralised network like chainlink or the oracle.
 //         */
 //         // msg.value.getConversionRate();
-//         require(msg.value.getConversionRate() >= minimumUSD, "Didn't send enough");
+//         require(msg.value.getConversionRate() >= MINIMUM_USD, "Didn't send enough");
 //         addressToAmountFunded[msg.sender] += msg.value;
 //         funders.push(msg.sender);
 //     }
